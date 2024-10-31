@@ -1,3 +1,7 @@
+import tkinter as tk
+from tkinter import messagebox
+
+# Load and save tasks from a file
 def load_tasks(filename="tasks.txt"):
     try:
         with open(filename, "r") as file:
@@ -10,43 +14,66 @@ def save_tasks(tasks, filename="tasks.txt"):
         for task in tasks:
             file.write(task + "\n")
 
-def add_task(tasks):
-    task = input("Enter a new task: ")
-    tasks.append(task)
-    print(f'Task "{task}" added!')
-
-def view_tasks(tasks):
-    if tasks:
-        print("Your tasks:")
-        for idx, task in enumerate(tasks, start=1):
-            print(f"{idx}. {task}")
+# Function to add a new task
+def add_task():
+    task = task_entry.get()
+    if task:
+        tasks.append(task)
+        update_task_list()
+        task_entry.delete(0, tk.END)
+        messagebox.showinfo("Task Added", f'Task "{task}" added!')
     else:
-        print("No tasks found.")
+        messagebox.showwarning("Input Error", "Please enter a task.")
 
-def delete_task(tasks):
-    view_tasks(tasks)
-    try:
-        idx = int(input("Enter the task number to delete: ")) - 1
-        if 0 <= idx < len(tasks):
-            removed_task = tasks.pop(idx)
-            print(f'Task "{removed_task}" deleted!')
-        else:
-            print("Invalid task number.")
-    except ValueError:
-        print("Please enter a valid number.")
+# Function to display tasks in the listbox
+def update_task_list():
+    task_list.delete(0, tk.END)
+    for idx, task in enumerate(tasks, start=1):
+        task_list.insert(tk.END, f"{idx}. {task}")
 
+# Function to delete a selected task
+def delete_task():
+    selected_task_index = task_list.curselection()
+    if selected_task_index:
+        idx = selected_task_index[0]
+        removed_task = tasks.pop(idx)
+        update_task_list()
+        messagebox.showinfo("Task Deleted", f'Task "{removed_task}" deleted!')
+    else:
+        messagebox.showwarning("Selection Error", "Please select a task to delete.")
+
+# Load initial tasks
 tasks = load_tasks()
-while True:
-    action = input("Choose an action - [A]dd, [V]iew, [D]elete, [Q]uit: ").upper()
-    if action == 'A':
-        add_task(tasks)
-    elif action == 'V':
-        view_tasks(tasks)
-    elif action == 'D':
-        delete_task(tasks)
-    elif action == 'Q':
-        save_tasks(tasks)
-        print("Tasks saved. Goodbye!")
-        break
-    else:
-        print("Invalid option.")
+
+# Set up the main application window
+root = tk.Tk()
+root.title("Task Manager")
+root.geometry("400x300")
+
+# Input field for new tasks
+task_entry = tk.Entry(root, width=40)
+task_entry.pack(pady=10)
+
+# Button to add a task
+add_button = tk.Button(root, text="Add Task", command=add_task)
+add_button.pack(pady=5)
+
+# Listbox to display tasks
+task_list = tk.Listbox(root, width=50, height=10)
+task_list.pack(pady=10)
+update_task_list()
+
+# Button to delete a selected task
+delete_button = tk.Button(root, text="Delete Selected Task", command=delete_task)
+delete_button.pack(pady=5)
+
+# Function to save tasks on exit
+def on_close():
+    save_tasks(tasks)
+    root.destroy()
+
+# Configure the close event to save tasks before exiting
+root.protocol("WM_DELETE_WINDOW", on_close)
+
+# Run the application
+root.mainloop()
